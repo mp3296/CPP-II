@@ -1,0 +1,10 @@
+CPP*
+Test*
+Maria*
+maze*
+# Ignore other unnecessary files and folders
+*.log
+*.tmp
+__pycache__/
+.vscode/
+.DS_Store
