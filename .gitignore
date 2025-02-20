@@ -1,8 +1,14 @@
+# Ignore all files and directories by default
+/*
+
+# Allow the current directory's files
+!/*
+
+# Ignore specific files and directories
 CPP*
 Test*
 Maria*
 maze*
-# Ignore other unnecessary files and folders
 *.log
 *.tmp
 __pycache__/
