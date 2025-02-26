@@ -52,7 +52,7 @@ except pygame.error as e:
     sys.exit(1)
 
 class Button:
-    def __init__(self, text, pos, size, callback):
+    def __init__(self, text, pos, size, callback, image=None):
         self.text = text
         self.pos = pos
         self.size = size
@@ -61,11 +61,15 @@ class Button:
         self.font = pygame.font.Font(None, 36)
         self.rendered_text = self.font.render(text, True, BLACK)
         self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
+        self.image = image
 
     def draw(self, screen):
-        pygame.draw.rect(screen, GRAY, self.rect)
-        pygame.draw.rect(screen, BLACK, self.rect, 2)
-        screen.blit(self.rendered_text, self.text_rect)
+        if self.image:
+            screen.blit(self.image, self.pos)
+        else:
+            pygame.draw.rect(screen, GRAY, self.rect)
+            pygame.draw.rect(screen, BLACK, self.rect, 2)
+            screen.blit(self.rendered_text, self.text_rect)
 
     def is_clicked(self, pos):
         return self.rect.collidepoint(pos)
@@ -159,12 +163,14 @@ class Game:
         self.minesweeper = None
         self.grid_size = GRID_SIZE
         self.num_mines = NUM_MINES
+        self.game_over_time = None
 
     def start_game(self):
         self.minesweeper = Minesweeper(size=self.grid_size, mines=self.num_mines)
         self.state = "GAME"
         self.start_time = time.time()
         pygame.mixer.Sound.play(start_sound)
+        self.game_over_time = None
 
     def settings(self):
         self.state = "SETTINGS"
@@ -215,6 +221,7 @@ class Game:
                         if event.button == 1:  # Left click
                             if not self.minesweeper.reveal_tile(x, y):
                                 self.state = "GAME_OVER"
+                                self.game_over_time = time.time()
                                 print("Game Over! You hit a mine.")
                         elif event.button == 3:  # Right click
                             self.minesweeper.place_flag(x, y)
@@ -233,12 +240,17 @@ class Game:
                 # Draw timer
                 elapsed_time = int(time.time() - self.start_time)
                 timer_text = font.render(f"Time: {elapsed_time}s", True, BLACK)
-                screen.blit(timer_text, (10, 10))
+                screen.blit(timer_text, (WIDTH - 150, 10))
 
                 if self.minesweeper.check_win():
                     self.state = "WIN"
                     pygame.mixer.Sound.play(win_sound)
                     print("Congratulations! You've revealed all safe tiles.")
+                    self.game_over_time = time.time()
+
+                if self.state in ["GAME_OVER", "WIN"] and self.game_over_time:
+                    if time.time() - self.game_over_time > 3:
+                        self.back_to_menu()
 
             pygame.display.flip()
             clock.tick(FPS)
