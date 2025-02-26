@@ -1,6 +1,7 @@
 import pygame
 import random
 import sys
+import time
 
 
 pygame.init()
@@ -21,7 +22,8 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT + 40))  # Extra space for timer
 pygame.display.set_caption("Minesweeper")
 clock = pygame.time.Clock()
 
@@ -87,18 +89,18 @@ class Minesweeper:
     def draw_board(self, reveal_all=False):
         for x in range(self.size):
             for y in range(self.size):
-                rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE + 40, TILE_SIZE, TILE_SIZE)
                 if (x, y) in self.revealed or reveal_all:
                     pygame.draw.rect(screen, GRAY, rect)
                     if self.board[x][y] == 'M':
-                        screen.blit(bomb_image, (x * TILE_SIZE, y * TILE_SIZE))
+                        screen.blit(bomb_image, (x * TILE_SIZE, y * TILE_SIZE + 40))
                     elif self.board[x][y] != 0:
                         text = font.render(str(self.board[x][y]), True, BLACK)
-                        screen.blit(text, (x * TILE_SIZE + 10, y * TILE_SIZE + 5))
+                        screen.blit(text, (x * TILE_SIZE + 10, y * TILE_SIZE + 45))
                 else:
                     pygame.draw.rect(screen, DARK_GRAY, rect)
                     if (x, y) in self.flags:
-                        screen.blit(flag_image, (x * TILE_SIZE, y * TILE_SIZE))
+                        screen.blit(flag_image, (x * TILE_SIZE, y * TILE_SIZE + 40))
                 pygame.draw.rect(screen, BLACK, rect, 1)
 
 def main():
@@ -106,6 +108,7 @@ def main():
     running = True
     game_over = False
     win = False
+    start_time = time.time()
 
     while running:
         for event in pygame.event.get():
@@ -114,7 +117,9 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
                 x, y = event.pos
                 x //= TILE_SIZE
-                y //= TILE_SIZE
+                y = (y - 40) // TILE_SIZE
+                if y < 0:
+                    continue
                 if event.button == 1:  # Left click
                     if not game.reveal_tile(x, y):
                         game_over = True
@@ -129,6 +134,12 @@ def main():
 
         screen.fill(WHITE)
         game.draw_board(reveal_all=game_over)
+
+        # Draw timer
+        elapsed_time = int(time.time() - start_time)
+        timer_text = font.render(f"Time: {elapsed_time}s", True, BLACK)
+        screen.blit(timer_text, (10, 10))
+
         pygame.display.flip()
         clock.tick(FPS)
 
