@@ -6,7 +6,8 @@
 
 # Ignore specific files and directories
 CPP*
-Test*
+Test P*
+Test-c*
 Maria*
 maze*
 *.log
