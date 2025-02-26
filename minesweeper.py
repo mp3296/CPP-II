@@ -146,16 +146,46 @@ class Game:
     def __init__(self):
         self.menu_buttons = [
             Button("Start Game", (WIDTH // 2 - 100, HEIGHT // 2 - 50), (200, 50), self.start_game),
-            Button("Quit", (WIDTH // 2 - 100, HEIGHT // 2 + 20), (200, 50), self.quit_game)
+            Button("Settings", (WIDTH // 2 - 100, HEIGHT // 2 + 20), (200, 50), self.settings),
+            Button("Quit", (WIDTH // 2 - 100, HEIGHT // 2 + 90), (200, 50), self.quit_game)
+        ]
+        self.settings_buttons = [
+            Button("Easy", (WIDTH // 2 - 100, HEIGHT // 2 - 50), (200, 50), self.set_easy),
+            Button("Medium", (WIDTH // 2 - 100, HEIGHT // 2 + 20), (200, 50), self.set_medium),
+            Button("Hard", (WIDTH // 2 - 100, HEIGHT // 2 + 90), (200, 50), self.set_hard),
+            Button("Back", (WIDTH // 2 - 100, HEIGHT // 2 + 160), (200, 50), self.back_to_menu)
         ]
         self.state = "MENU"
         self.minesweeper = None
+        self.grid_size = GRID_SIZE
+        self.num_mines = NUM_MINES
 
     def start_game(self):
-        self.minesweeper = Minesweeper()
+        self.minesweeper = Minesweeper(size=self.grid_size, mines=self.num_mines)
         self.state = "GAME"
         self.start_time = time.time()
         pygame.mixer.Sound.play(start_sound)
+
+    def settings(self):
+        self.state = "SETTINGS"
+
+    def set_easy(self):
+        self.grid_size = 8
+        self.num_mines = 10
+        self.back_to_menu()
+
+    def set_medium(self):
+        self.grid_size = 16
+        self.num_mines = 40
+        self.back_to_menu()
+
+    def set_hard(self):
+        self.grid_size = 24
+        self.num_mines = 99
+        self.back_to_menu()
+
+    def back_to_menu(self):
+        self.state = "MENU"
 
     def quit_game(self):
         pygame.quit()
@@ -170,6 +200,10 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.state == "MENU":
                         for button in self.menu_buttons:
+                            if button.is_clicked(event.pos):
+                                button.callback()
+                    elif self.state == "SETTINGS":
+                        for button in self.settings_buttons:
                             if button.is_clicked(event.pos):
                                 button.callback()
                     elif self.state == "GAME" and not self.minesweeper.check_win():
@@ -189,6 +223,9 @@ class Game:
 
             if self.state == "MENU":
                 for button in self.menu_buttons:
+                    button.draw(screen)
+            elif self.state == "SETTINGS":
+                for button in self.settings_buttons:
                     button.draw(screen)
             elif self.state in ["GAME", "GAME_OVER"]:
                 self.minesweeper.draw_board(reveal_all=(self.state == "GAME_OVER"))
