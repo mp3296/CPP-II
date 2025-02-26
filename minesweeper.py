@@ -38,8 +38,12 @@ font = pygame.font.Font(None, 36)
 try:
     bomb_image = pygame.image.load("bomb.png")
     flag_image = pygame.image.load("flag.png")
+    win_image = pygame.image.load("win.png")
+    gameover_image = pygame.image.load("gameover.png")
     bomb_image = pygame.transform.scale(bomb_image, (TILE_SIZE, TILE_SIZE))
     flag_image = pygame.transform.scale(flag_image, (TILE_SIZE, TILE_SIZE))
+    win_image = pygame.transform.scale(win_image, (WIDTH, HEIGHT))
+    gameover_image = pygame.transform.scale(gameover_image, (WIDTH, HEIGHT))
 except pygame.error as e:
     print(f"Error loading images: {e}")
     sys.exit(1)
@@ -106,6 +110,8 @@ class Minesweeper:
 
     def reveal_tile(self, x, y):
         """Reveal the tile at the given position."""
+        if not (0 <= x < self.size and 0 <= y < self.size):
+            return True  # Ignore clicks outside the board
         if (x, y) in self.mine_positions:
             self.revealed.add((x, y))
             pygame.mixer.Sound.play(gameover_sound)
@@ -122,6 +128,8 @@ class Minesweeper:
 
     def place_flag(self, x, y):
         """Place or remove a flag at the given position."""
+        if not (0 <= x < self.size and 0 <= y < self.size):
+            return  # Ignore clicks outside the board
         if (x, y) in self.flags:
             self.flags.remove((x, y))
         else:
@@ -130,7 +138,7 @@ class Minesweeper:
 
     def check_win(self):
         """Check if the player has won the game."""
-        return len(self.revealed) == self.size * self.size - self.mines
+        return self.flags == self.mine_positions or len(self.revealed) == self.size * self.size - self.mines
 
     def draw_board(self, reveal_all=False):
         """Draw the game board."""
@@ -169,6 +177,8 @@ class Game:
         self.grid_size = GRID_SIZE
         self.num_mines = NUM_MINES
         self.game_over_time = None
+        self.paused_time = 0
+        self.pause_start_time = None
 
     def start_game(self):
         self.minesweeper = Minesweeper(size=self.grid_size, mines=self.num_mines)
@@ -176,6 +186,8 @@ class Game:
         self.start_time = time.time()
         pygame.mixer.Sound.play(start_sound)
         self.game_over_time = None
+        self.paused_time = 0
+        self.pause_start_time = None
 
     def settings(self):
         self.state = "SETTINGS"
@@ -260,6 +272,13 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.ACTIVEEVENT:
+                    if event.state == 6:  # Window minimized or restored
+                        if event.gain == 0:  # Window minimized
+                            self.pause_start_time = time.time()
+                        elif event.gain == 1 and self.pause_start_time:  # Window restored
+                            self.paused_time += time.time() - self.pause_start_time
+                            self.pause_start_time = None
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.state == "MENU":
                         for button in self.menu_buttons:
@@ -273,12 +292,13 @@ class Game:
                         x, y = event.pos
                         x //= TILE_SIZE
                         y = (y - 40) // TILE_SIZE
-                        if y < 0:
+                        if y < 0 or x < 0 or x >= self.grid_size or y >= self.grid_size:
                             continue
                         if event.button == 1:  # Left click
                             if not self.minesweeper.reveal_tile(x, y):
                                 self.state = "GAME_OVER"
                                 self.game_over_time = time.time()
+                                pygame.mixer.Sound.play(gameover_sound)
                                 print("Game Over! You hit a mine.")
                         elif event.button == 3:  # Right click
                             self.minesweeper.place_flag(x, y)
@@ -295,7 +315,7 @@ class Game:
                 self.minesweeper.draw_board(reveal_all=(self.state == "GAME_OVER"))
 
                 # Draw timer
-                elapsed_time = int(time.time() - self.start_time)
+                elapsed_time = int(time.time() - self.start_time - self.paused_time)
                 timer_text = font.render(f"Time: {elapsed_time}s", True, BLACK)
                 screen.blit(timer_text, (WIDTH - 150, 10))
 
@@ -308,6 +328,11 @@ class Game:
                 if self.state in ["GAME_OVER", "WIN"] and self.game_over_time:
                     if time.time() - self.game_over_time > 3:
                         self.back_to_menu()
+
+            if self.state == "WIN":
+                screen.blit(win_image, (0, 0))
+            elif self.state == "GAME_OVER":
+                screen.blit(gameover_image, (0, 0))
 
             pygame.display.flip()
             clock.tick(FPS)
