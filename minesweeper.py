@@ -2,6 +2,10 @@ import pygame
 import random
 import sys
 import time
+import pandas as pd
+from datetime import datetime
+import tkinter as tk
+from tkinter import messagebox
 
 # Initialise Pygame
 pygame.init()
@@ -151,7 +155,8 @@ class Game:
         self.menu_buttons = [
             Button("Start Game", (WIDTH // 2 - 100, HEIGHT // 2 - 50), (200, 50), self.start_game),
             Button("Settings", (WIDTH // 2 - 100, HEIGHT // 2 + 20), (200, 50), self.settings),
-            Button("Quit", (WIDTH // 2 - 100, HEIGHT // 2 + 90), (200, 50), self.quit_game)
+            Button("Feedback", (WIDTH // 2 - 100, HEIGHT // 2 + 90), (200, 50), self.feedback),
+            Button("Quit", (WIDTH // 2 - 100, HEIGHT // 2 + 160), (200, 50), self.quit_game)
         ]
         self.settings_buttons = [
             Button("Easy", (WIDTH // 2 - 100, HEIGHT // 2 - 50), (200, 50), self.set_easy),
@@ -190,12 +195,64 @@ class Game:
         self.num_mines = 99
         self.back_to_menu()
 
+    def feedback(self):
+        self.launch_feedback_form()
+
     def back_to_menu(self):
         self.state = "MENU"
 
     def quit_game(self):
         pygame.quit()
         sys.exit()
+
+    def launch_feedback_form(self):
+        def submit_feedback():
+            name = name_entry.get()
+            email = email_entry.get()
+            message = message_entry.get("1.0", tk.END).strip()
+
+            if not name or not email or not message:
+                messagebox.showerror("Error", "All fields are required.")
+                return
+            if "@" not in email or "." not in email:
+                messagebox.showerror("Error", "Invalid email address.")
+                return
+
+            feedback_data = {
+                'Name': [name],
+                'Email': [email],
+                'Message': [message],
+                'Date': [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+            }
+            df = pd.DataFrame(feedback_data)
+            try:
+                existing_df = pd.read_excel('feedback.xlsx')
+                df = pd.concat([existing_df, df], ignore_index=True)
+            except FileNotFoundError:
+                pass
+            df.to_excel('feedback.xlsx', index=False)
+            messagebox.showinfo("Success", "Feedback submitted successfully!")
+            feedback_window.destroy()
+
+        feedback_window = tk.Tk()
+        feedback_window.title("Feedback Form")
+
+        tk.Label(feedback_window, text="Name:").grid(row=0, column=0, padx=10, pady=10)
+        name_entry = tk.Entry(feedback_window)
+        name_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        tk.Label(feedback_window, text="Email:").grid(row=1, column=0, padx=10, pady=10)
+        email_entry = tk.Entry(feedback_window)
+        email_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        tk.Label(feedback_window, text="Message:").grid(row=2, column=0, padx=10, pady=10)
+        message_entry = tk.Text(feedback_window, height=10, width=40)
+        message_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        submit_button = tk.Button(feedback_window, text="Submit", command=submit_feedback)
+        submit_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+        feedback_window.mainloop()
 
     def run(self):
         running = True
