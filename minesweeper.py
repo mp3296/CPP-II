@@ -12,7 +12,7 @@ NUM_MINES = 10
 WIDTH, HEIGHT = TILE_SIZE * GRID_SIZE, TILE_SIZE * GRID_SIZE
 FPS = 30
 
-# Colors
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (192, 192, 192)
@@ -20,7 +20,6 @@ DARK_GRAY = (128, 128, 128)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Minesweeper")
@@ -65,6 +64,7 @@ class Minesweeper:
 
     def reveal_tile(self, x, y):
         if (x, y) in self.mine_positions:
+            self.revealed.add((x, y))
             return False
         if (x, y) not in self.revealed:
             self.revealed.add((x, y))
@@ -84,11 +84,11 @@ class Minesweeper:
     def check_win(self):
         return len(self.revealed) == self.size * self.size - self.mines
 
-    def draw_board(self):
+    def draw_board(self, reveal_all=False):
         for x in range(self.size):
             for y in range(self.size):
                 rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                if (x, y) in self.revealed:
+                if (x, y) in self.revealed or reveal_all:
                     pygame.draw.rect(screen, GRAY, rect)
                     if self.board[x][y] == 'M':
                         screen.blit(bomb_image, (x * TILE_SIZE, y * TILE_SIZE))
@@ -128,7 +128,7 @@ def main():
             print("Congratulations! You've revealed all safe tiles.")
 
         screen.fill(WHITE)
-        game.draw_board()
+        game.draw_board(reveal_all=game_over)
         pygame.display.flip()
         clock.tick(FPS)
 
