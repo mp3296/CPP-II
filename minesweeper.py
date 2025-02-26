@@ -3,17 +3,17 @@ import random
 import sys
 import time
 
-
+# Initialise Pygame
 pygame.init()
 
 # Constants
 TILE_SIZE = 40
 GRID_SIZE = 10
 NUM_MINES = 10
-WIDTH, HEIGHT = TILE_SIZE * GRID_SIZE, TILE_SIZE * GRID_SIZE
+WIDTH, HEIGHT = TILE_SIZE * GRID_SIZE, TILE_SIZE * GRID_SIZE + 40  # Extra space for timer
 FPS = 30
 
-
+# Colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (192, 192, 192)
@@ -22,8 +22,8 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT + 40))  # Extra space for timer
+# Initialise screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Minesweeper")
 clock = pygame.time.Clock()
 
@@ -52,11 +52,13 @@ class Minesweeper:
         self.calculate_adjacent_mines()
 
     def generate_mines(self):
+        """Generate mines at random positions on the board."""
         while len(self.mine_positions) < self.mines:
             x, y = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
             self.mine_positions.add((x, y))
 
     def calculate_adjacent_mines(self):
+        """Calculate the number of adjacent mines for each tile."""
         for x, y in self.mine_positions:
             self.board[x][y] = 'M'
             for i in range(max(0, x-1), min(self.size, x+2)):
@@ -65,6 +67,7 @@ class Minesweeper:
                         self.board[i][j] += 1
 
     def reveal_tile(self, x, y):
+        """Reveal the tile at the given position."""
         if (x, y) in self.mine_positions:
             self.revealed.add((x, y))
             return False
@@ -78,15 +81,18 @@ class Minesweeper:
         return True
 
     def place_flag(self, x, y):
+        """Place or remove a flag at the given position."""
         if (x, y) in self.flags:
             self.flags.remove((x, y))
         else:
             self.flags.add((x, y))
 
     def check_win(self):
+        """Check if the player has won the game."""
         return len(self.revealed) == self.size * self.size - self.mines
 
     def draw_board(self, reveal_all=False):
+        """Draw the game board."""
         for x in range(self.size):
             for y in range(self.size):
                 rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE + 40, TILE_SIZE, TILE_SIZE)
@@ -104,6 +110,7 @@ class Minesweeper:
                 pygame.draw.rect(screen, BLACK, rect, 1)
 
 def main():
+    """Main function to run the game."""
     game = Minesweeper()
     running = True
     game_over = False
