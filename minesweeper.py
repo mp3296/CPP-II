@@ -30,8 +30,14 @@ clock = pygame.time.Clock()
 font = pygame.font.Font(None, 36)
 
 # Load images
-bomb_image = pygame.image.load("bomb.png")
-flag_image = pygame.image.load("flag.png")
+try:
+    bomb_image = pygame.image.load("bomb.png")
+    flag_image = pygame.image.load("flag.png")
+    bomb_image = pygame.transform.scale(bomb_image, (TILE_SIZE, TILE_SIZE))
+    flag_image = pygame.transform.scale(flag_image, (TILE_SIZE, TILE_SIZE))
+except pygame.error as e:
+    print(f"Error loading images: {e}")
+    sys.exit(1)
 
 class Minesweeper:
     def __init__(self, size=GRID_SIZE, mines=NUM_MINES):
