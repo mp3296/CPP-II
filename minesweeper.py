@@ -40,6 +40,17 @@ except pygame.error as e:
     print(f"Error loading images: {e}")
     sys.exit(1)
 
+# Load sounds
+try:
+    tile_sound = pygame.mixer.Sound("tile.mp3")
+    flag_sound = pygame.mixer.Sound("flag.mp3")
+    gameover_sound = pygame.mixer.Sound("gameover.mp3")
+    win_sound = pygame.mixer.Sound("win.mp3")
+    start_sound = pygame.mixer.Sound("start.mp3")
+except pygame.error as e:
+    print(f"Error loading sounds: {e}")
+    sys.exit(1)
+
 class Button:
     def __init__(self, text, pos, size, callback):
         self.text = text
@@ -89,9 +100,11 @@ class Minesweeper:
         """Reveal the tile at the given position."""
         if (x, y) in self.mine_positions:
             self.revealed.add((x, y))
+            pygame.mixer.Sound.play(gameover_sound)
             return False
         if (x, y) not in self.revealed:
             self.revealed.add((x, y))
+            pygame.mixer.Sound.play(tile_sound)
             if self.board[x][y] == 0:
                 for i in range(max(0, x-1), min(self.size, x+2)):
                     for j in range(max(0, y-1), min(self.size, y+2)):
@@ -105,6 +118,7 @@ class Minesweeper:
             self.flags.remove((x, y))
         else:
             self.flags.add((x, y))
+        pygame.mixer.Sound.play(flag_sound)
 
     def check_win(self):
         """Check if the player has won the game."""
@@ -141,6 +155,7 @@ class Game:
         self.minesweeper = Minesweeper()
         self.state = "GAME"
         self.start_time = time.time()
+        pygame.mixer.Sound.play(start_sound)
 
     def quit_game(self):
         pygame.quit()
@@ -185,6 +200,7 @@ class Game:
 
                 if self.minesweeper.check_win():
                     self.state = "WIN"
+                    pygame.mixer.Sound.play(win_sound)
                     print("Congratulations! You've revealed all safe tiles.")
 
             pygame.display.flip()
