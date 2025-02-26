@@ -40,6 +40,25 @@ except pygame.error as e:
     print(f"Error loading images: {e}")
     sys.exit(1)
 
+class Button:
+    def __init__(self, text, pos, size, callback):
+        self.text = text
+        self.pos = pos
+        self.size = size
+        self.callback = callback
+        self.rect = pygame.Rect(pos, size)
+        self.font = pygame.font.Font(None, 36)
+        self.rendered_text = self.font.render(text, True, BLACK)
+        self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, GRAY, self.rect)
+        pygame.draw.rect(screen, BLACK, self.rect, 2)
+        screen.blit(self.rendered_text, self.text_rect)
+
+    def is_clicked(self, pos):
+        return self.rect.collidepoint(pos)
+
 class Minesweeper:
     def __init__(self, size=GRID_SIZE, mines=NUM_MINES):
         self.size = size
@@ -109,53 +128,71 @@ class Minesweeper:
                         screen.blit(flag_image, (x * TILE_SIZE, y * TILE_SIZE + 40))
                 pygame.draw.rect(screen, BLACK, rect, 1)
 
-def main():
-    """Main function to run the game."""
-    game = Minesweeper()
-    running = True
-    game_over = False
-    win = False
-    start_time = time.time()
+class Game:
+    def __init__(self):
+        self.menu_buttons = [
+            Button("Start Game", (WIDTH // 2 - 100, HEIGHT // 2 - 50), (200, 50), self.start_game),
+            Button("Quit", (WIDTH // 2 - 100, HEIGHT // 2 + 20), (200, 50), self.quit_game)
+        ]
+        self.state = "MENU"
+        self.minesweeper = None
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-                x, y = event.pos
-                x //= TILE_SIZE
-                y = (y - 40) // TILE_SIZE
-                if y < 0:
-                    continue
-                if event.button == 1:  # Left click
-                    if not game.reveal_tile(x, y):
-                        game_over = True
-                        print("Game Over! You hit a mine.")
-                elif event.button == 3:  # Right click
-                    game.place_flag(x, y)
+    def start_game(self):
+        self.minesweeper = Minesweeper()
+        self.state = "GAME"
+        self.start_time = time.time()
 
-        if game.check_win():
-            game_over = True
-            win = True
-            print("Congratulations! You've revealed all safe tiles.")
+    def quit_game(self):
+        pygame.quit()
+        sys.exit()
 
-        screen.fill(WHITE)
-        game.draw_board(reveal_all=game_over)
+    def run(self):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.state == "MENU":
+                        for button in self.menu_buttons:
+                            if button.is_clicked(event.pos):
+                                button.callback()
+                    elif self.state == "GAME" and not self.minesweeper.check_win():
+                        x, y = event.pos
+                        x //= TILE_SIZE
+                        y = (y - 40) // TILE_SIZE
+                        if y < 0:
+                            continue
+                        if event.button == 1:  # Left click
+                            if not self.minesweeper.reveal_tile(x, y):
+                                self.state = "GAME_OVER"
+                                print("Game Over! You hit a mine.")
+                        elif event.button == 3:  # Right click
+                            self.minesweeper.place_flag(x, y)
 
-        # Draw timer
-        elapsed_time = int(time.time() - start_time)
-        timer_text = font.render(f"Time: {elapsed_time}s", True, BLACK)
-        screen.blit(timer_text, (10, 10))
+            screen.fill(WHITE)
 
-        pygame.display.flip()
-        clock.tick(FPS)
+            if self.state == "MENU":
+                for button in self.menu_buttons:
+                    button.draw(screen)
+            elif self.state in ["GAME", "GAME_OVER"]:
+                self.minesweeper.draw_board(reveal_all=(self.state == "GAME_OVER"))
 
-    if win:
-        print("You win!")
-    else:
-        print("Game Over! You hit a mine.")
-    pygame.quit()
-    sys.exit()
+                # Draw timer
+                elapsed_time = int(time.time() - self.start_time)
+                timer_text = font.render(f"Time: {elapsed_time}s", True, BLACK)
+                screen.blit(timer_text, (10, 10))
+
+                if self.minesweeper.check_win():
+                    self.state = "WIN"
+                    print("Congratulations! You've revealed all safe tiles.")
+
+            pygame.display.flip()
+            clock.tick(FPS)
+
+        pygame.quit()
+        sys.exit()
 
 if __name__ == '__main__':
-    main()
+    game = Game()
+    game.run()
