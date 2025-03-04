@@ -92,12 +92,14 @@ class Minesweeper:
         self.flags = set()
         self.generate_mines()
         self.calculate_adjacent_mines()
+        self.print_board()
 
     def generate_mines(self):
         """Generate mines at random positions on the board."""
         while len(self.mine_positions) < self.mines:
             x, y = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
             self.mine_positions.add((x, y))
+        print(f"Mines generated at: {self.mine_positions}")
 
     def calculate_adjacent_mines(self):
         """Calculate the number of adjacent mines for each tile."""
@@ -108,6 +110,12 @@ class Minesweeper:
                     if self.board[i][j] != 'M':
                         self.board[i][j] += 1
 
+    def print_board(self):
+        """Print the board for debugging purposes."""
+        print("Board after calculating adjacent mines:")
+        for row in self.board:
+            print(row)
+
     def reveal_tile(self, x, y):
         """Reveal the tile at the given position."""
         if not (0 <= x < self.size and 0 <= y < self.size):
@@ -115,10 +123,12 @@ class Minesweeper:
         if (x, y) in self.mine_positions:
             self.revealed.add((x, y))
             pygame.mixer.Sound.play(gameover_sound)
+            print(f"Revealed a mine at ({x}, {y})")
             return False
         if (x, y) not in self.revealed:
             self.revealed.add((x, y))
             pygame.mixer.Sound.play(tile_sound)
+            print(f"Revealed a safe tile at ({x}, {y})")
             if self.board[x][y] == 0:
                 for i in range(max(0, x-1), min(self.size, x+2)):
                     for j in range(max(0, y-1), min(self.size, y+2)):
@@ -132,13 +142,18 @@ class Minesweeper:
             return  # Ignore clicks outside the board
         if (x, y) in self.flags:
             self.flags.remove((x, y))
+            print(f"Flag removed at ({x}, {y})")
         else:
             self.flags.add((x, y))
+            print(f"Flag placed at ({x}, {y})")
         pygame.mixer.Sound.play(flag_sound)
 
     def check_win(self):
         """Check if the player has won the game."""
-        return self.flags == self.mine_positions or len(self.revealed) == self.size * self.size - self.mines
+        win = self.flags == self.mine_positions or len(self.revealed) == self.size * self.size - self.mines
+        if win:
+            print(f"Check win: {win}")
+        return win
 
     def draw_board(self, reveal_all=False):
         """Draw the game board."""
@@ -188,32 +203,40 @@ class Game:
         self.game_over_time = None
         self.paused_time = 0
         self.pause_start_time = None
+        print("Game started")
 
     def settings(self):
         self.state = "SETTINGS"
+        print("Settings menu")
 
     def set_easy(self):
         self.grid_size = 8
         self.num_mines = 10
         self.back_to_menu()
+        print("Set to easy mode")
 
     def set_medium(self):
         self.grid_size = 16
         self.num_mines = 40
         self.back_to_menu()
+        print("Set to medium mode")
 
     def set_hard(self):
         self.grid_size = 24
         self.num_mines = 99
         self.back_to_menu()
+        print("Set to hard mode")
 
     def feedback(self):
         self.launch_feedback_form()
+        print("Feedback form launched")
 
     def back_to_menu(self):
         self.state = "MENU"
+        print("Back to menu")
 
     def quit_game(self):
+        print("Game quit")
         pygame.quit()
         sys.exit()
 
@@ -245,6 +268,7 @@ class Game:
             df.to_excel('feedback.xlsx', index=False)
             messagebox.showinfo("Success", "Feedback submitted successfully!")
             feedback_window.destroy()
+            print("Feedback submitted")
 
         feedback_window = tk.Tk()
         feedback_window.title("Feedback Form")
@@ -273,12 +297,14 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.ACTIVEEVENT:
-                    if event.state == 6:  # Window minimized or restored
-                        if event.gain == 0:  # Window minimized
+                    if event.state == 6:  # Window minimised or restored
+                        if event.gain == 0:  # Window minimised
                             self.pause_start_time = time.time()
+                            print("Window minimised")
                         elif event.gain == 1 and self.pause_start_time:  # Window restored
                             self.paused_time += time.time() - self.pause_start_time
                             self.pause_start_time = None
+                            print("Window restored")
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.state == "MENU":
                         for button in self.menu_buttons:
@@ -299,7 +325,7 @@ class Game:
                                 self.state = "GAME_OVER"
                                 self.game_over_time = time.time()
                                 pygame.mixer.Sound.play(gameover_sound)
-                                print("Game Over! You hit a mine.")
+                                print(f"Game Over! You hit a mine at ({x}, {y})")
                         elif event.button == 3:  # Right click
                             self.minesweeper.place_flag(x, y)
 

@@ -6,6 +6,7 @@
 
 # Ignore specific files and directories
 CPP*
+in pro*
 Test P*
 Test-c*
 Maria*
