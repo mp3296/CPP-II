@@ -124,6 +124,7 @@ class Minesweeper:
             self.revealed.add((x, y))
             pygame.mixer.Sound.play(gameover_sound)
             print(f"Revealed a mine at ({x}, {y})")
+            self.print_board_with_revealed()
             return False
         if (x, y) not in self.revealed:
             self.revealed.add((x, y))
@@ -134,6 +135,7 @@ class Minesweeper:
                     for j in range(max(0, y-1), min(self.size, y+2)):
                         if (i, j) not in self.revealed:
                             self.reveal_tile(i, j)
+        self.print_board_with_revealed()
         return True
 
     def place_flag(self, x, y):
@@ -172,6 +174,18 @@ class Minesweeper:
                     if (x, y) in self.flags:
                         screen.blit(flag_image, (x * TILE_SIZE, y * TILE_SIZE + 40))
                 pygame.draw.rect(screen, BLACK, rect, 1)
+
+    def print_board_with_revealed(self):
+        """Print the board with revealed tiles for debugging purposes."""
+        print("Board with revealed tiles:")
+        for x in range(self.size):
+            row = []
+            for y in range(self.size):
+                if (x, y) in self.revealed:
+                    row.append(self.board[x][y])
+                else:
+                    row.append(' ')
+            print(row)
 
 class Game:
     def __init__(self):
@@ -337,7 +351,7 @@ class Game:
             elif self.state == "SETTINGS":
                 for button in self.settings_buttons:
                     button.draw(screen)
-            elif self.state in ["GAME", "GAME_OVER"]:
+            elif self.state in ["GAME", "GAME_OVER", "WIN"]:
                 self.minesweeper.draw_board(reveal_all=(self.state == "GAME_OVER"))
 
                 # Draw timer
@@ -345,7 +359,7 @@ class Game:
                 timer_text = font.render(f"Time: {elapsed_time}s", True, BLACK)
                 screen.blit(timer_text, (WIDTH - 150, 10))
 
-                if self.minesweeper.check_win():
+                if self.minesweeper.check_win() and self.state != "WIN":
                     self.state = "WIN"
                     pygame.mixer.Sound.play(win_sound)
                     print("Congratulations! You've revealed all safe tiles.")
