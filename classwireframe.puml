@@ -1,0 +1,61 @@
+@startuml
+title Minesweeper Class Diagram
+
+class Game {
+    - menu_buttons: list
+    - settings_buttons: list
+    - state: str
+    - minesweeper: Minesweeper
+    - grid_size: int
+    - num_mines: int
+    - game_over_time: float
+    - paused_time: float
+    - pause_start_time: float
+    + start_game(): void
+    + settings(): void
+    + set_easy(): void
+    + set_medium(): void
+    + set_hard(): void
+    + feedback(): void
+    + back_to_menu(): void
+    + quit_game(): void
+    + launch_feedback_form(): void
+    + run(): void
+}
+
+class Minesweeper {
+    - size: int
+    - mines: int
+    - board: list
+    - mine_positions: set
+    - revealed: set
+    - flags: set
+    + __init__(size: int, mines: int)
+    + generate_mines(): void
+    + calculate_adjacent_mines(): void
+    + print_board(): void
+    + reveal_tile(x: int, y: int): bool
+    + place_flag(x: int, y: int): void
+    + check_win(): bool
+    + draw_board(reveal_all: bool): void
+    + print_board_with_revealed(): void
+}
+
+class Button {
+    - text: str
+    - pos: tuple
+    - size: tuple
+    - callback: function
+    - rect: pygame.Rect
+    - font: pygame.font.Font
+    - rendered_text: pygame.Surface
+    - text_rect: pygame.Rect
+    - image: pygame.Surface
+    + __init__(text: str, pos: tuple, size: tuple, callback: function, image: pygame.Surface = None)
+    + draw(screen: pygame.Surface): void
+    + is_clicked(pos: tuple): bool
+}
+
+Game --> Minesweeper
+Game --> Button
+@enduml

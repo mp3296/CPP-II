@@ -12,9 +12,13 @@ pygame.init()
 
 # Constants
 TILE_SIZE = 40
-GRID_SIZE = 10
-NUM_MINES = 10
-WIDTH, HEIGHT = TILE_SIZE * GRID_SIZE, TILE_SIZE * GRID_SIZE + 40  # Extra space for timer
+GRID_SIZE_EASY = 8
+GRID_SIZE_MEDIUM = 16
+GRID_SIZE_HARD = 24
+NUM_MINES_EASY = 10
+NUM_MINES_MEDIUM = 40
+NUM_MINES_HARD = 99
+WIDTH, HEIGHT = TILE_SIZE * GRID_SIZE_HARD, TILE_SIZE * GRID_SIZE_HARD + 40  # Extra space for timer
 FPS = 30
 
 # Colours
@@ -83,7 +87,7 @@ class Button:
         return self.rect.collidepoint(pos)
 
 class Minesweeper:
-    def __init__(self, size=GRID_SIZE, mines=NUM_MINES):
+    def __init__(self, size, mines):
         self.size = size
         self.mines = mines
         self.board = [[0 for _ in range(size)] for _ in range(size)]
@@ -203,8 +207,8 @@ class Game:
         ]
         self.state = "MENU"
         self.minesweeper = None
-        self.grid_size = GRID_SIZE
-        self.num_mines = NUM_MINES
+        self.grid_size = GRID_SIZE_EASY
+        self.num_mines = NUM_MINES_EASY
         self.game_over_time = None
         self.paused_time = 0
         self.pause_start_time = None
@@ -224,20 +228,20 @@ class Game:
         print("Settings menu")
 
     def set_easy(self):
-        self.grid_size = 8
-        self.num_mines = 10
+        self.grid_size = GRID_SIZE_EASY
+        self.num_mines = NUM_MINES_EASY
         self.back_to_menu()
         print("Set to easy mode")
 
     def set_medium(self):
-        self.grid_size = 16
-        self.num_mines = 40
+        self.grid_size = GRID_SIZE_MEDIUM
+        self.num_mines = NUM_MINES_MEDIUM
         self.back_to_menu()
         print("Set to medium mode")
 
     def set_hard(self):
-        self.grid_size = 24
-        self.num_mines = 99
+        self.grid_size = GRID_SIZE_HARD
+        self.num_mines = NUM_MINES_HARD
         self.back_to_menu()
         print("Set to hard mode")
 

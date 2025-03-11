@@ -1,0 +1,30 @@
+@startuml
+title Minesweeper
+
+package "Main Menu" {
+    rectangle "Start Game" as StartGame
+    rectangle "Settings" as Settings
+    rectangle "Feedback" as Feedback
+    rectangle "Quit" as Quit
+}
+
+package "Settings Menu" {
+    rectangle "Easy" as Easy
+    rectangle "Medium" as Medium
+    rectangle "Hard" as Hard
+    rectangle "Back" as Back
+}
+
+package "Game Screen" {
+    rectangle "Minesweeper Board" as Board
+    rectangle "Timer" as Timer
+}
+
+package "Feedback Form" {
+    rectangle "Name" as Name
+    rectangle "Email" as Email
+    rectangle "Message" as Message
+    rectangle "Submit" as Submit
+}
+
+@enduml
